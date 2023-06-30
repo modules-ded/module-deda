@@ -1,31 +1,43 @@
+import asyncio
 from telethon import types, events
 from telethon.tl import functions
 from .. import loader
 
 @loader.tds
 class Onliner(loader.Module):
-    """Бесконечный онлайн"""
+    """Модуль для чтения всех чатов"""
     strings = {"name": "Onliner"}
     is_reading_enabled = False
     already_thanked = False
 
+    async def read_dialogs(self):
+        """ - бесконечный онлайн в клик"""
+        async for dialog in self.client.iter_dialogs():
+            await self.client.send_read_acknowledge(dialog.id)
+
     @loader.unrestricted
     @loader.ratelimit
     async def onlcmd(self, message):
-        """ - Бесконечный онлайн вкл/выкл"""
+        """ - бесконечный онлайн"""
         self.is_reading_enabled = not self.is_reading_enabled
         
         if self.is_reading_enabled:
-            await message.edit("❤‍🔥 Вы включили функцию Auto-Online! ")
-            async for dialog in message.client.iter_dialogs():
-                await message.client.send_read_acknowledge(dialog.id)
+            await message.edit("♻️Бесконечный онлайн включен")
+            await self.read_dialogs()
+            asyncio.ensure_future(self.continuous_read())
         else:
-            await message.edit("♻️ Auto-Online успешно выключен!")
+            await message.edit("📴Бесконечный онлайн был отключен")
+
+    async def continuous_read(self):
+        """Функция для периодического чтения чатов"""
+        while self.is_reading_enabled:
+            await self.read_dialogs()
+            await asyncio.sleep(1)
 
     @loader.unrestricted
     @loader.ratelimit
     async def on_message(self, message):
-        """Слежка крч"""
+        """Отслеживает входящие сообщения, если чтение включено"""
         if self.is_reading_enabled:
             sender_info = ""
             sender = await message.get_sender()
@@ -41,9 +53,7 @@ class Onliner(loader.Module):
                 print(sender_info)
         
         if not self.already_thanked:
-            pinned_msg = await message.client.send_message(
-                message.chat_id,
-                "❤‍🔥Большое спасибо за установку нашего модуля от Just channel! Мы очень благодарны за установку! Мы постараемся изо всех сил в продвижении. Спасибо!"
+            pinned_msg = await message.client.send_message('me','❤️Большое спасибо за установку нашего модуля от Just channel! Мы очень благодарны за установку! Мы постараемся изо всех сил в продвижении. Спасибо!'
             )
             await message.client(functions.messages.UpdatePinnedMessageRequest(
                 peer=types.InputPeerChannel(
