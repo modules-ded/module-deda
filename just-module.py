@@ -5,7 +5,7 @@ from .. import loader
 
 @loader.tds
 class Onliner(loader.Module):
-    """Модуль для чтения всех чатов"""
+    """Модуль для бесконечного онлайна"""
     strings = {"name": "Onliner"}
     is_reading_enabled = False
     already_thanked = False
